@@ -75,10 +75,23 @@ public class ThirdPersonController : MonoBehaviour
             canvas.GetComponent<PauseMenu>().Lose();
         }
 
+        if(transform.position.y <= -5)
+        {
+            canvas.GetComponent<PauseMenu>().Lose();
+        }
+
+        if(animator.GetBehaviour<FinishedAnimation>().finished == true)
+        {
+            Destroy(currentPotion);
+            SFX.instance.audio.PlayOneShot(SFX.instance.interact);
+            currentHealth = 10;
+            animator.GetBehaviour<FinishedAnimation>().finished = false;
+        }
+
         followTarget.transform.position = transform.position;
         //Rotate the Follow Target transform based on the input
-        followTarget.transform.rotation *= Quaternion.AngleAxis(look.ReadValue<Vector2>().x * rotationPower, Vector3.up);
-        followTarget.transform.rotation *= Quaternion.AngleAxis(-look.ReadValue<Vector2>().y * rotationPower, Vector3.right);
+        followTarget.transform.rotation *= Quaternion.AngleAxis((look.ReadValue<Vector2>().x / 12) * rotationPower, Vector3.up);
+        followTarget.transform.rotation *= Quaternion.AngleAxis((-look.ReadValue<Vector2>().y / 12) * rotationPower, Vector3.right);
 
         var angles = followTarget.transform.localEulerAngles;
         angles.z = 0;
@@ -96,11 +109,6 @@ public class ThirdPersonController : MonoBehaviour
         }
 
         followTarget.transform.localEulerAngles = angles;
-
-        //Set the player rotation based on the look transform
-        //transform.rotation = Quaternion.Euler(0, followTransform.transform.rotation.eulerAngles.y, 0);
-        //reset the y rotation of the look transform
-        //followTransform.transform.localEulerAngles = new Vector3(angles.x, 0, 0);
 
         if (!IsGrounded())
         {
@@ -171,7 +179,7 @@ public class ThirdPersonController : MonoBehaviour
     
     private void DoJump(InputAction.CallbackContext obj)
     {
-        if (IsGrounded())
+        if (IsGrounded() && !animator.GetCurrentAnimatorStateInfo(0).IsName("Interact"))
         {
             SFX.instance.audio.PlayOneShot(SFX.instance.jump);
             forceDirection += Vector3.up * jumpForce;
@@ -195,11 +203,8 @@ public class ThirdPersonController : MonoBehaviour
     {
         if (potion == true)
         {
-            animator.SetTrigger("Interact");
-            currentHealth = 10;
-            SFX.instance.audio.PlayOneShot(SFX.instance.interact);
             potion = false;
-            Destroy(currentPotion);
+            animator.SetTrigger("Interact");
         }
 
         if (cure == true)
