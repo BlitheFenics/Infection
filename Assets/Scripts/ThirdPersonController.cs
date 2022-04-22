@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class ThirdPersonController : MonoBehaviour
 {
     private PlayerController playerController;
+    public Image HealthBar;
     private InputAction move, look;
     [SerializeField] GameObject canvas;
 
@@ -29,9 +30,9 @@ public class ThirdPersonController : MonoBehaviour
 
     private GameObject currentPotion;
     private bool potion = false, cure = false;
-    int health = 0;
+    public float currentHealth = 10;
+    private float maxHealth = 10;
 
-    //public Vector2 look;
     public float rotationPower = 3f, rotationLerp = 0.5f;
     public GameObject followTarget;
 
@@ -44,7 +45,6 @@ public class ThirdPersonController : MonoBehaviour
         animator = this.GetComponent<Animator>();
         rb = this.GetComponent<Rigidbody>();
         playerController = new PlayerController();
-        //health bar
     }
 
     private void OnEnable()
@@ -68,6 +68,13 @@ public class ThirdPersonController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        HealthBar.fillAmount = currentHealth / maxHealth;
+        currentHealth -= 1 * Time.deltaTime;
+        if(currentHealth <= 0)
+        {
+            canvas.GetComponent<PauseMenu>().Lose();
+        }
+
         followTarget.transform.position = transform.position;
         //Rotate the Follow Target transform based on the input
         followTarget.transform.rotation *= Quaternion.AngleAxis(look.ReadValue<Vector2>().x * rotationPower, Vector3.up);
@@ -189,8 +196,7 @@ public class ThirdPersonController : MonoBehaviour
         if (potion == true)
         {
             animator.SetTrigger("Interact");
-            health = 10; ;
-            //increase health bar
+            currentHealth = 10;
             SFX.instance.audio.PlayOneShot(SFX.instance.interact);
             potion = false;
             Destroy(currentPotion);
